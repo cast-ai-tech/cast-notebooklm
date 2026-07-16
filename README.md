@@ -1,25 +1,17 @@
 # cast-notebooklm
 
-**CLI**, **servidor MCP** y **API REST** unificados para [Google NotebookLM](https://notebooklm.google.com) — un solo proyecto en Python que combina ideas y código de tres proyectos open source distintos en una sola herramienta instalable.
+Una herramienta que conecta tus notebooks de [Google NotebookLM](https://notebooklm.google.com) con Claude (o con n8n, o con la terminal), para que puedas preguntarle cosas a tus documentos, generar audios/videos/resúmenes, y automatizar todo eso — sin entrar manualmente a la web de NotebookLM cada vez.
 
-Habla directo con la API interna de NotebookLM por HTTP (sin automatizar clics de navegador para el uso diario — el navegador solo se usa una vez, en el login), así que es rápido y scripteable. Trae almacenamiento de credenciales cifrado, soporte multi-cuenta, un marcador anti-inyección-de-prompts en las respuestas de chat, y perfiles nombrados de herramientas MCP.
-
-> No es un fork publicado para la comunidad de ningún proyecto original — es una unificación personal de ideas de tres proyectos con licencia MIT en una sola herramienta, con atribución completa. Ver [CREDITS.md](CREDITS.md) para el detalle exacto de qué vino de dónde.
+> Este proyecto está construido sobre el trabajo de otras 3 personas (open source, licencia MIT). No es un producto propio desde cero — es una combinación de ideas de esos 3 proyectos en uno solo. Créditos completos en [CREDITS.md](CREDITS.md).
 
 ---
 
 ## Índice
 
+- [🚀 Guía rápida (para cualquiera, sin saber programar)](#-guía-rápida-para-cualquiera-sin-saber-programar)
 - [Qué incluye](#qué-incluye)
 - [Cómo funciona](#cómo-funciona)
-- [Requisitos](#requisitos)
-- [Instalación](#instalación)
-- [Autenticación](#autenticación)
-- [Uso](#uso)
-  - [CLI](#cli)
-  - [Servidor MCP](#servidor-mcp)
-  - [API REST](#api-rest)
-- [Referencia de configuración](#referencia-de-configuración)
+- [Uso avanzado (para developers)](#uso-avanzado-para-developers)
 - [Seguridad](#seguridad)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Tests](#tests)
@@ -29,97 +21,157 @@ Habla directo con la API interna de NotebookLM por HTTP (sin automatizar clics d
 
 ---
 
-## Qué incluye
+## 🚀 Guía rápida (para cualquiera, sin saber programar)
 
-| Capacidad | Detalle |
-|---|---|
-| **CLI** (`nlm`) | Set completo de comandos: notebooks, fuentes, chat/query, generación de Studio, research, compartir, batch/pipeline, queries cross-notebook, notas, labels, alias, config, login multi-perfil |
-| **Servidor MCP** (`notebooklm-mcp`) | Transportes stdio, HTTP y SSE. ~39 herramientas. Plug-and-play con Claude Desktop, Claude Code, Cursor, Windsurf, Cline, y cualquier otro host MCP |
-| **API REST** (`cast-notebooklm-api`) | Servicio FastAPI para herramientas de automatización (n8n, Zapier, Make) que no hablan MCP. Autenticada por API key |
-| **Generación de Studio** | Los 9 tipos de artefacto: audio overview, video overview, infografía, presentación/diapositivas, reporte, flashcards, quiz, tabla de datos, mapa mental |
-| **Credenciales cifradas en reposo** | AES-256-GCM — las cookies y tokens nunca se escriben en disco en texto plano |
-| **Multi-cuenta** | Perfiles de autenticación nombrados (`nlm login --profile <nombre>`), seleccionables por request en REST, por sesión en CLI/MCP |
-| **Marcador de contenido IA** | Cada respuesta de chat queda etiquetada como entrada no confiable generada por IA — defensa contra inyección de prompts |
-| **Perfiles de herramientas MCP** | `minimal` / `standard` / `full` — controla cuántas herramientas ve el agente host, para ahorrar contexto |
+Seguí estos pasos en orden, uno por uno. No te saltes ninguno.
 
-## Cómo funciona
+### Paso 0: cosas que necesitás antes de empezar
 
-NotebookLM no tiene API pública oficial. La capa de autenticación y RPC de este proyecto (`src/notebooklm_tools/core/`) habla directo con los endpoints internos `batchexecute` de NotebookLM por HTTP (`httpx`), igual que lo hace la propia app web. Un login interactivo único (Chrome DevTools Protocol) extrae las cookies de sesión; después de eso, cada operación es un simple request HTTP — sin automatización de navegador, sin clics.
+1. **Una computadora** (Windows, Mac o Linux, no importa).
+2. **Google Chrome** instalado (o Brave, Edge, Arc — cualquier navegador basado en Chrome). Se usa una sola vez, para loguearte.
+3. **Una cuenta de Google secundaria**, NO la principal que usás para trabajo o cosas importantes. ¿Por qué? Esta herramienta habla con una parte "interna" de Google que no es 100% oficial, y en teoría Google podría bloquearla algún día. Mejor usar una cuenta que no te importe si eso pasa. Podés crear una gratis en 2 minutos en accounts.google.com.
+4. **Python instalado.** Python es el lenguaje de programación en el que está hecha esta herramienta — necesitás tenerlo instalado en tu compu, como necesitás tener Word instalado para abrir un documento de Word.
 
-Los tres transportes — CLI, servidor MCP, API REST — llaman exactamente a la misma **capa de servicios** (`src/notebooklm_tools/services/`). Ahí viven la validación, el manejo de errores, el marcador de provenance y la lógica de negocio. Ninguno de los transportes habla directo con el cliente de bajo nivel en `core/`:
+   Para saber si ya lo tenés: abrí una **terminal** (en Windows buscá "PowerShell" en el menú de inicio; en Mac buscá "Terminal" con Spotlight) y escribí:
 
-```
-┌──────────┐   ┌──────────────┐   ┌───────────┐
-│   CLI    │   │  Servidor    │   │ API REST  │
-│  (nlm)   │   │  MCP (note-  │   │(cast-note-│
-│          │   │booklm-mcp)   │   │booklm-api)│
-└────┬─────┘   └──────┬───────┘   └─────┬─────┘
-     │                │                 │
-     └────────────────┼─────────────────┘
-                       ▼
-        services/ (lógica de negocio,
-      validación, marcador de provenance)
-                       │
-                       ▼
-      core/ (cliente HTTP, auth, RPC)
-                       │
-                       ▼
-        API interna de NotebookLM (Google)
-```
+   ```
+   python --version
+   ```
 
-Esto significa que un fix o una capacidad nueva agregada en `services/` está disponible al instante desde los tres puntos de entrada.
+   Si te muestra algo como `Python 3.12.4`, ya lo tenés y podés saltar al Paso 1. Si te da error, descargalo gratis de [python.org/downloads](https://www.python.org/downloads/) — instalalo con las opciones que vienen por default (en Windows, asegurate de tildar la casilla que dice "Add Python to PATH" durante la instalación).
 
-## Requisitos
+### Paso 1: descargar el proyecto a tu compu
 
-- Python 3.11+
-- Google Chrome, Brave, Edge, Arc, Chromium, Vivaldi u Opera (solo para el login único — nada más necesita navegador)
-- Una **cuenta de Google secundaria/de prueba** — ver [Seguridad](#seguridad) el porqué
-
-## Instalación
+En la misma terminal, pegá esto y apretá Enter:
 
 ```bash
 git clone https://github.com/AlexanderKast/cast-notebooklm.git
+```
+
+Esto copia todo el proyecto a una carpeta nueva en tu compu llamada `cast-notebooklm`. Ahora entrá a esa carpeta:
+
+```bash
 cd cast-notebooklm
+```
 
+> Si te dice que no reconoce el comando `git`: instalá Git desde [git-scm.com/downloads](https://git-scm.com/downloads) (opciones por default están bien) y volvé a intentar el Paso 1.
+
+### Paso 2: instalar la herramienta
+
+Copiá y pegá estos comandos, **uno por uno**, apretando Enter después de cada uno:
+
+```bash
 python -m venv .venv
-source .venv/bin/activate      # Windows: .venv\Scripts\activate
+```
 
+*(Esto crea una "caja aislada" para que esta herramienta no se mezcle con otras cosas de Python que tengas instaladas. Es normal, no hace nada visible.)*
+
+Ahora "entrá" a esa caja — el comando cambia según tu sistema:
+
+- **Windows:**
+  ```
+  .venv\Scripts\activate
+  ```
+- **Mac / Linux:**
+  ```
+  source .venv/bin/activate
+  ```
+
+Vas a ver que el texto de tu terminal cambia y ahora empieza con `(.venv)` — eso significa que funcionó.
+
+Último paso de instalación:
+
+```bash
 pip install -e .
 ```
 
-Verificar:
+Esto descarga e instala todo lo que la herramienta necesita para funcionar. Puede tardar 1-2 minutos, es normal.
+
+Para confirmar que quedó bien instalado:
 
 ```bash
 nlm --help
-notebooklm-mcp --help
 ```
 
-## Autenticación
+Si ves una lista de comandos, ¡ya está instalado! Si ves un error, copiá el mensaje de error y pedime ayuda con eso.
+
+> **Importante:** cada vez que quieras usar la herramienta de nuevo (en una terminal nueva), primero tenés que "entrar a la caja" otra vez con el comando de "entrá a esa caja" de arriba (`.venv\Scripts\activate` en Windows, `source .venv/bin/activate` en Mac/Linux), parado en la carpeta `cast-notebooklm`.
+
+### Paso 3: conectar tu cuenta de Google
 
 ```bash
 nlm login
 ```
 
-Esto abre una ventana de Chrome vía Chrome DevTools Protocol. Logueate ahí con tu cuenta de Google — solo se extraen las **cookies** de sesión (nunca tu contraseña). Las credenciales quedan cifradas en reposo (ver [Seguridad](#seguridad)) bajo `~/.notebooklm-mcp-cli/`.
+Se te va a abrir una ventana de Chrome sola. Ahí, logueate normalmente con tu cuenta de Google secundaria (la del Paso 0). Cuando termines de loguearte, la ventana se cierra sola y volvés a ver la terminal con un mensaje de "✓ Successfully authenticated!".
 
-**Múltiples cuentas:**
+Tu contraseña **nunca** se guarda en ningún lado — solo se guardan las "cookies" de la sesión (como cuando un sitio te recuerda logueado), y encima quedan cifradas (encriptadas) en tu disco, no en texto plano.
 
-```bash
-nlm login --profile trabajo     # autentica una segunda cuenta bajo el perfil "trabajo"
-nlm login switch trabajo        # la deja como default para CLI/MCP de ahí en más
-nlm login profile list          # ver todos los perfiles guardados
-```
+### Paso 4: conectarlo a Claude Desktop
 
-Verificar estado de auth en cualquier momento:
+Esto es lo que hace que puedas simplemente chatear con Claude y pedirle cosas de tus notebooks, sin usar la terminal para nada más.
 
-```bash
-nlm login --check
-nlm doctor                      # diagnóstico completo
-```
+1. Abrí el archivo de configuración de Claude Desktop con el Bloc de Notas (Windows) o TextEdit (Mac):
+   - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
+     (pegá esa ruta exacta en la barra de direcciones del Explorador de archivos)
+   - **Mac:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 
-## Uso
+2. Si el archivo está vacío o no existe, creá uno con este contenido exacto (reemplazando la ruta por la tuya real):
 
-### CLI
+   ```json
+   {
+     "mcpServers": {
+       "notebooklm": {
+         "command": "C:\\ruta\\completa\\a\\cast-notebooklm\\.venv\\Scripts\\notebooklm-mcp.exe"
+       }
+     }
+   }
+   ```
+
+   *(En Mac, la ruta sería algo como `/Users/tu-usuario/cast-notebooklm/.venv/bin/notebooklm-mcp`, sin las barras invertidas dobles.)*
+
+   Si el archivo **ya tiene contenido** (otras configuraciones tuyas), no lo borres — solo agregale la parte `"mcpServers": { ... }` sin tocar lo demás. Si no estás seguro de cómo hacer eso, pedime que te ayude a editarlo directamente.
+
+3. Guardá el archivo y **cerrá Claude Desktop completamente y volvelo a abrir.**
+
+4. Listo. Ahora podés simplemente escribirle a Claude cosas como *"Listame mis notebooks de NotebookLM"* o *"Preguntale a mi notebook de X tema sobre Y"*, y Claude va a usar esta herramienta automáticamente.
+
+### ¿Algo no funcionó?
+
+Copiá el mensaje de error exacto que te aparece y pedime ayuda con eso — con el mensaje exacto puedo diagnosticar el problema al toque.
+
+---
+
+## Qué incluye
+
+En criollo: podés usar tus notebooks de NotebookLM desde 3 lugares distintos, todos conectados a la misma cuenta y a los mismos notebooks:
+
+| Forma de usarlo | Para quién es |
+|---|---|
+| **Claude Desktop / Claude Code / Cursor** (vía MCP) | Cualquiera — solo chateás, sin comandos. Es lo que configuramos en la Guía Rápida arriba |
+| **Terminal** (comandos `nlm ...`) | Gente que prefiere comandos directos o quiere automatizar con scripts |
+| **API REST** (para n8n, Zapier, Make) | Gente técnica armando automatizaciones sin código en n8n u otras herramientas |
+
+Además, trae de fábrica:
+
+- **Los 9 tipos de contenido de Studio**: audio, video, infografía, presentación, reporte, flashcards, quiz, tabla de datos, mapa mental
+- **Credenciales cifradas**: tu login de Google nunca queda guardado en texto plano en el disco
+- **Multi-cuenta**: podés conectar más de una cuenta de Google si querés
+- **Marcador de "esto lo generó una IA"**: cada respuesta de chat viene etiquetada como contenido generado por IA (protección contra que alguien esconda instrucciones maliciosas dentro de un documento que subiste)
+
+## Cómo funciona
+
+NotebookLM no tiene una API pública oficial de Google. Esta herramienta habla directo con la misma conexión interna que usa la página web de NotebookLM, así que es rápida (no abre ni hace clics en un navegador para cada operación — el navegador solo se usa una vez, para el login inicial).
+
+Las 3 formas de usarlo (Claude Desktop, terminal, API REST) comparten exactamente el mismo motor interno — así que un arreglo o mejora que se le haga al motor queda disponible para las 3 formas al instante.
+
+---
+
+## Uso avanzado (para developers)
+
+Esta sección es para quien quiera usar la terminal directamente o construir automatizaciones. Si solo querés usarlo desde Claude Desktop, con la Guía Rápida de arriba ya está todo listo.
+
+### Comandos de terminal (CLI)
 
 ```bash
 nlm notebook list
@@ -141,9 +193,19 @@ nlm describe notebook <notebook-id>         # resumen generado por IA
 
 Corré `nlm --help` o cualquier subcomando con `--help` para la referencia completa — hay mucho más (operaciones batch, queries cross-notebook, compartir, exports, alias).
 
-### Servidor MCP
+Múltiples cuentas:
 
-**stdio** (para configs de apps de escritorio):
+```bash
+nlm login --profile trabajo     # autentica una segunda cuenta bajo el perfil "trabajo"
+nlm login switch trabajo        # la deja como default para CLI/MCP de ahí en más
+nlm login profile list          # ver todos los perfiles guardados
+nlm login --check               # verificar que la sesión sigue activa
+nlm doctor                      # diagnóstico completo
+```
+
+### Servidor MCP (para otros clientes además de Claude Desktop)
+
+**stdio** (lo que usa Claude Desktop):
 
 ```bash
 notebooklm-mcp
@@ -155,31 +217,14 @@ notebooklm-mcp
 notebooklm-mcp --transport http --host 127.0.0.1 --port 8000
 ```
 
-**Conectarlo a una herramienta de IA.** Algunos clientes se configuran solos:
+Algunos clientes se configuran solos:
 
 ```bash
 nlm setup list          # ver clientes soportados y su estado de config
 nlm setup add <cliente> # ej: cursor, windsurf, cline-cli, claude-code, codex-cli
 ```
 
-Para **Claude Desktop** (no está en la lista automática — se edita el config a mano), agregar a `claude_desktop_config.json`:
-
-- Windows: `%APPDATA%\Claude\claude_desktop_config.json`
-- macOS: `~/Library/Application Support/Claude/claude_desktop_config.json`
-
-```json
-{
-  "mcpServers": {
-    "notebooklm": {
-      "command": "/ruta/absoluta/a/cast-notebooklm/.venv/bin/notebooklm-mcp"
-    }
-  }
-}
-```
-
-(En Windows usá la ruta `.venv\Scripts\notebooklm-mcp.exe`.) Reiniciá Claude Desktop después.
-
-**Limitar herramientas visibles** (ahorra contexto del agente host):
+Limitar qué herramientas ve el agente (ahorra contexto):
 
 ```bash
 CAST_NLM_PROFILE=minimal notebooklm-mcp     # solo lectura de notebooks + chat + health (~9 tools)
@@ -187,7 +232,7 @@ CAST_NLM_PROFILE=standard notebooklm-mcp    # + gestión de fuentes/notebooks, a
 # sin setear, o full: todas las herramientas (default)
 ```
 
-### API REST
+### API REST (para n8n / Zapier / Make)
 
 Requiere al menos una API key — el servidor se rehúsa a arrancar sin `CAST_NLM_API_KEYS` seteada:
 
@@ -259,7 +304,7 @@ curl -X POST http://127.0.0.1:8008/studio/generate \
 
 `artifact_type` es uno de: `audio`, `video`, `infographic`, `slide_deck`, `report`, `flashcards`, `quiz`, `data_table`, `mind_map`. `options` acepta cualquier parámetro que reciba la función de servicio `create_artifact` (formatos por tipo, dificultad, idioma, prompt de enfoque, etc.).
 
-## Referencia de configuración
+### Todas las variables de configuración
 
 Copiá [`.env.example`](.env.example) a `.env` y completá lo que necesites (nunca commitees `.env`).
 
@@ -279,6 +324,8 @@ Copiá [`.env.example`](.env.example) a `.env` y completá lo que necesites (nun
 | `NOTEBOOKLM_QUERY_TIMEOUT` | `120.0` | Servidor MCP | Segundos antes de que una query dé timeout |
 
 Ver `nlm --help`, `notebooklm-mcp --help`, y los docstrings de `src/notebooklm_tools/` para el set completo de env vars específicas de CLI/MCP heredadas del proyecto base.
+
+---
 
 ## Seguridad
 
