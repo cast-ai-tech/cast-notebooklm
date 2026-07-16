@@ -58,12 +58,15 @@ notebooklm-mcp = "notebooklm_tools.mcp.server:main"
 # REST API entry point
 cast-notebooklm-api = "rest_api.main:run"
 
+# Telegram bot entry point
+cast-notebooklm-telegram = "telegram_bot.bot:run"
+
 [project.urls]
 Homepage = "https://github.com/AlexanderKast/cast-notebooklm"
 Repository = "https://github.com/AlexanderKast/cast-notebooklm"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/notebooklm_tools", "rest_api"]
+packages = ["src/notebooklm_tools", "rest_api", "telegram_bot"]
 
 [tool.ruff]
 line-length = 100

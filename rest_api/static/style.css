@@ -1,0 +1,176 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+  background: #0f1115;
+  color: #e6e6e6;
+}
+
+header {
+  padding: 1rem 1.5rem;
+  border-bottom: 1px solid #2a2d34;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+header h1 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #7dd3fc;
+}
+
+.key-bar {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.key-bar input {
+  padding: 0.4rem 0.6rem;
+  border-radius: 6px;
+  border: 1px solid #2a2d34;
+  background: #1a1d24;
+  color: #e6e6e6;
+  width: 220px;
+}
+
+button {
+  padding: 0.4rem 0.8rem;
+  border-radius: 6px;
+  border: 1px solid #2a2d34;
+  background: #1a1d24;
+  color: #e6e6e6;
+  cursor: pointer;
+}
+
+button:hover {
+  background: #23262e;
+}
+
+main {
+  display: flex;
+  min-height: calc(100vh - 70px);
+}
+
+aside {
+  width: 260px;
+  flex-shrink: 0;
+  border-right: 1px solid #2a2d34;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+aside h2 {
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: #9aa0ab;
+  margin-top: 0;
+}
+
+#notebook-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+#notebook-list li {
+  padding: 0.5rem;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-bottom: 0.25rem;
+}
+
+#notebook-list li:hover {
+  background: #1a1d24;
+}
+
+#notebook-list li.active {
+  background: #14324a;
+}
+
+#notebook-list li.error {
+  color: #f87171;
+  cursor: default;
+}
+
+section {
+  flex: 1;
+  padding: 1rem 1.5rem;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+section.hidden {
+  display: none;
+}
+
+.chat-log {
+  flex: 1;
+  min-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #2a2d34;
+  border-radius: 8px;
+  padding: 1rem;
+  margin-bottom: 0.75rem;
+}
+
+.chat-msg {
+  margin-bottom: 0.75rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
+
+.chat-msg.user {
+  color: #7dd3fc;
+}
+
+.chat-msg.assistant {
+  color: #e6e6e6;
+}
+
+.chat-input-row {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.chat-input-row input {
+  flex: 1;
+  padding: 0.5rem 0.75rem;
+  border-radius: 6px;
+  border: 1px solid #2a2d34;
+  background: #1a1d24;
+  color: #e6e6e6;
+}
+
+.studio-panel {
+  margin-top: 1.5rem;
+  border-top: 1px solid #2a2d34;
+  padding-top: 1rem;
+}
+
+.studio-panel h3 {
+  margin-top: 0;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  color: #9aa0ab;
+}
+
+.studio-panel button {
+  margin-right: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+#studio-status {
+  white-space: pre-wrap;
+  background: #1a1d24;
+  border-radius: 6px;
+  padding: 0.75rem;
+  min-height: 1.5rem;
+}

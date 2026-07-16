@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>cast-notebooklm</title>
+<link rel="stylesheet" href="/dashboard/style.css" />
+</head>
+<body>
+  <header>
+    <h1>cast-notebooklm</h1>
+    <div class="key-bar">
+      <input id="api-key-input" type="password" placeholder="Tu API key (X-API-Key)" />
+      <button id="save-key-btn">Guardar y cargar notebooks</button>
+    </div>
+  </header>
+  <main>
+    <aside>
+      <h2>Tus notebooks</h2>
+      <ul id="notebook-list"><li>Ingresá tu API key arriba para empezar.</li></ul>
+    </aside>
+    <section id="chat-panel" class="hidden">
+      <h2 id="active-notebook-title"></h2>
+      <div id="chat-log" class="chat-log"></div>
+      <div class="chat-input-row">
+        <input id="question-input" type="text" placeholder="Escribí tu pregunta y apretá Enter..." />
+        <button id="send-question-btn">Preguntar</button>
+      </div>
+      <div class="studio-panel">
+        <h3>Studio</h3>
+        <button id="content-pack-btn">⚡ Generar pack (audio + quiz + resumen)</button>
+        <button id="check-status-btn">Ver estado</button>
+        <pre id="studio-status"></pre>
+      </div>
+    </section>
+  </main>
+  <script src="/dashboard/app.js"></script>
+</body>
+</html>

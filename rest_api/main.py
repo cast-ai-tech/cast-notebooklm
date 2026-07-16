@@ -18,14 +18,18 @@ from __future__ import annotations
 
 import logging
 import os
+from pathlib import Path
 
 from fastapi import FastAPI, Request
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, RedirectResponse
+from fastapi.staticfiles import StaticFiles
 
 from notebooklm_tools.services.errors import ServiceError, ValidationError
 
 from .deps import API_KEYS_ENV_VAR, get_configured_api_keys
 from .routers import chat, notebooks, sources, studio
+
+_STATIC_DIR = Path(__file__).parent / "static"
 
 logger = logging.getLogger(__name__)
 
@@ -43,6 +47,16 @@ app.include_router(notebooks.router)
 app.include_router(chat.router)
 app.include_router(sources.router)
 app.include_router(studio.router)
+
+# Static dashboard (plain HTML/CSS/JS, no build step -- see static/app.js).
+# It's just the frontend shell; every data call it makes still goes through
+# the routers above and requires the API key the user enters in the page.
+app.mount("/dashboard", StaticFiles(directory=_STATIC_DIR, html=True), name="dashboard")
+
+
+@app.get("/", include_in_schema=False)
+async def root_redirect() -> RedirectResponse:
+    return RedirectResponse(url="/dashboard/")
 
 
 @app.exception_handler(ValidationError)

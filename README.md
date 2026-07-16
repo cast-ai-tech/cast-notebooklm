@@ -9,6 +9,7 @@ Una herramienta que conecta tus notebooks de [Google NotebookLM](https://noteboo
 ## Índice
 
 - [🚀 Guía rápida (para cualquiera, sin saber programar)](#-guía-rápida-para-cualquiera-sin-saber-programar)
+- [⚡ Superpoderes extra](#-superpoderes-extra)
 - [Qué incluye](#qué-incluye)
 - [Cómo funciona](#cómo-funciona)
 - [Uso avanzado (para developers)](#uso-avanzado-para-developers)
@@ -142,6 +143,48 @@ Copiá el mensaje de error exacto que te aparece y pedime ayuda con eso — con 
 
 ---
 
+## ⚡ Superpoderes extra
+
+Estas 4 cosas **no vienen** en ninguno de los 3 proyectos originales sobre los que está construido esto — son agregados propios de cast-notebooklm.
+
+### 🖥️ Dashboard web (una pantalla con botones, sin terminal)
+
+La forma más simple de usar todo esto sin escribir un solo comando después de instalarlo.
+
+1. Abrí una terminal en la carpeta `cast-notebooklm` (activá la caja como en el Paso 2 de la Guía Rápida).
+2. Corré:
+   ```bash
+   export CAST_NLM_API_KEYS=$(python -c "import secrets; print(secrets.token_urlsafe(32))")
+   cast-notebooklm-api
+   ```
+   *(El primer comando inventa una contraseña random para tu API; el segundo prende el servidor. Dejalo corriendo — no cierres esa ventana de terminal.)*
+3. Abrí tu navegador en **http://127.0.0.1:8008** — ahí te va a pedir una API key. Volvé a la terminal, copiá el texto largo que se generó al correr el primer comando (después de `CAST_NLM_API_KEYS=`), y pegalo en la casilla de la página.
+4. Listo: vas a ver tus notebooks en una lista a la izquierda. Hacé click en uno, escribí una pregunta, y apretá "Preguntar". También hay un botón "⚡ Generar pack" que te crea de una audio + quiz + resumen del notebook.
+
+### 🤖 Bot de Telegram (preguntale a tus notebooks desde el celular)
+
+1. En Telegram, buscá **@BotFather**, escribile `/newbot`, seguí las instrucciones (elegís un nombre y un usuario para tu bot). Al final te da un **token** — es un texto largo tipo `123456:ABC-...`. Copialo.
+2. Buscá **@userinfobot** en Telegram y escribile cualquier cosa — te va a responder con tu **ID numérico** de usuario (ej: `987654321`). Copialo también — sin este paso el bot no le va a responder a nadie, ni siquiera a vos, por seguridad.
+3. En la terminal (con la caja activada):
+   ```bash
+   export CAST_NLM_TELEGRAM_BOT_TOKEN="pegá acá el token del paso 1"
+   export CAST_NLM_TELEGRAM_ALLOWED_USERS="pegá acá tu ID del paso 2"
+   cast-notebooklm-telegram
+   ```
+4. Andá a Telegram, buscá tu bot por el usuario que le pusiste, y escribile `/start`. Comandos disponibles: `/notebooks` (lista tus notebooks), `/usar <numero>` (elegís con cuál hablar), y después simplemente escribís tu pregunta como un mensaje normal.
+
+Si más adelante querés que otra persona también pueda usar el bot, agregá su ID numérico a `CAST_NLM_TELEGRAM_ALLOWED_USERS` separado por coma (ej: `"987654321,123123123"`).
+
+### 📦 Content Pack (audio + quiz + resumen, en un solo click)
+
+En vez de generar audio, después quiz, después el resumen por separado (y esperar cada uno), el botón "⚡ Generar pack" del dashboard (o el endpoint `/studio/content-pack` para quien use la API directo) los pide los tres juntos de una. Video queda afuera del combo rápido por default porque tarda mucho más — se puede pedir aparte.
+
+### 🔔 Avisos automáticos (webhooks) cuando termina algo en Studio
+
+Generar un audio o video en NotebookLM tarda minutos. En vez de estar refrescando para ver si ya terminó, le podés pasar una URL (por ejemplo, un webhook de n8n) y cast-notebooklm le avisa solo cuando está listo. Ver la sección técnica más abajo para el detalle.
+
+---
+
 ## Qué incluye
 
 En criollo: podés usar tus notebooks de NotebookLM desde 3 lugares distintos, todos conectados a la misma cuenta y a los mismos notebooks:
@@ -149,6 +192,8 @@ En criollo: podés usar tus notebooks de NotebookLM desde 3 lugares distintos, t
 | Forma de usarlo | Para quién es |
 |---|---|
 | **Claude Desktop / Claude Code / Cursor** (vía MCP) | Cualquiera — solo chateás, sin comandos. Es lo que configuramos en la Guía Rápida arriba |
+| **Dashboard web** | Cualquiera — una página con botones, sin instalar nada más. Ver [Superpoderes](#-superpoderes-extra) |
+| **Bot de Telegram** | Cualquiera — preguntale a tus notebooks desde el celular. Ver [Superpoderes](#-superpoderes-extra) |
 | **Terminal** (comandos `nlm ...`) | Gente que prefiere comandos directos o quiere automatizar con scripts |
 | **API REST** (para n8n, Zapier, Make) | Gente técnica armando automatizaciones sin código en n8n u otras herramientas |
 
@@ -251,6 +296,7 @@ Por default en `127.0.0.1:8008`. Docs interactivos en `http://127.0.0.1:8008/doc
 | `POST` | `/chat/ask` | Consultar un notebook (chat) |
 | `POST` | `/sources` | Agregar una fuente (url/texto/drive/archivo) |
 | `POST` | `/studio/generate` | Generar un artefacto de Studio (los 9 tipos) |
+| `POST` | `/studio/content-pack` | Generar varios tipos juntos en un call (default: audio + quiz + report) |
 | `GET` | `/studio/status/{notebook_id}` | Consultar estado de generación de Studio |
 | `POST` | `/studio/delete` | Borrar un artefacto de Studio |
 
@@ -304,6 +350,67 @@ curl -X POST http://127.0.0.1:8008/studio/generate \
 
 `artifact_type` es uno de: `audio`, `video`, `infographic`, `slide_deck`, `report`, `flashcards`, `quiz`, `data_table`, `mind_map`. `options` acepta cualquier parámetro que reciba la función de servicio `create_artifact` (formatos por tipo, dificultad, idioma, prompt de enfoque, etc.).
 
+Content pack (varios tipos en un call, default audio + quiz + report):
+
+```bash
+curl -X POST http://127.0.0.1:8008/studio/content-pack \
+  -H "X-API-Key: $CAST_NLM_API_KEYS" \
+  -H "Content-Type: application/json" \
+  -d '{"notebook_id": "<id>"}'
+```
+
+Pedir tipos específicos y opciones por tipo:
+
+```bash
+curl -X POST http://127.0.0.1:8008/studio/content-pack \
+  -H "X-API-Key: $CAST_NLM_API_KEYS" \
+  -H "Content-Type: application/json" \
+  -d '{
+        "notebook_id": "<id>",
+        "types": ["audio", "video", "quiz"],
+        "options": {"quiz": {"question_count": 10}}
+      }'
+```
+
+**Webhook al terminar** (funciona igual en `/studio/generate` y `/studio/content-pack`): pasá `"webhook_url"` en el body y cast-notebooklm avisa solo cuando termina, en vez de que tengas que estar consultando `/studio/status`:
+
+```bash
+curl -X POST http://127.0.0.1:8008/studio/content-pack \
+  -H "X-API-Key: $CAST_NLM_API_KEYS" \
+  -H "Content-Type: application/json" \
+  -d '{"notebook_id": "<id>", "webhook_url": "https://tu-n8n.com/webhook/xyz"}'
+```
+
+Cuando termina (o pasan 20 minutos sin terminar), se hace un POST a esa URL con:
+
+```json
+{
+  "event": "studio.completed",
+  "notebook_id": "<id>",
+  "artifacts": [{"artifact_id": "...", "status": "completed", "type": "audio", "...": "..."}],
+  "timed_out_artifact_ids": []
+}
+```
+
+### Bot de Telegram
+
+Ver [Superpoderes extra](#-superpoderes-extra) para el paso a paso completo (crear el bot, obtener tu ID de usuario). Referencia rápida de comandos una vez corriendo:
+
+| Comando | Qué hace |
+|---|---|
+| `/start` o `/help` | Muestra la ayuda |
+| `/notebooks` | Lista tus notebooks numerados |
+| `/usar <numero>` | Elige con cuál notebook hablar (usa el número de `/notebooks`, o un ID directo) |
+| `/status` | Muestra el notebook y perfil activos en ese chat |
+| `/perfil <nombre>` | Cambia de cuenta (perfil de `nlm login --profile`) |
+| *(cualquier otro texto)* | Se interpreta como pregunta al notebook activo |
+
+El estado (qué notebook/perfil tiene activo cada chat de Telegram) se guarda en `~/.notebooklm-mcp-cli/telegram_chat_state.json` — no contiene credenciales, solo IDs de notebook.
+
+### Dashboard web
+
+Ver [Superpoderes extra](#-superpoderes-extra) para el paso a paso. Técnicamente es solo HTML/CSS/JS estático servido por la misma API REST en `/dashboard/` (sin build, sin React/npm) — la página guarda tu API key en el `localStorage` del navegador y hace los mismos calls que cualquier otro cliente de la API (`/notebooks`, `/chat/ask`, `/studio/content-pack`, `/studio/status`).
+
 ### Todas las variables de configuración
 
 Copiá [`.env.example`](.env.example) a `.env` y completá lo que necesites (nunca commitees `.env`).
@@ -317,6 +424,8 @@ Copiá [`.env.example`](.env.example) a `.env` y completá lo que necesites (nun
 | `CAST_NLM_PROFILE` | `full` | Servidor MCP | Visibilidad de herramientas: `minimal` \| `standard` \| `full` |
 | `CAST_NLM_AI_MARKER` | `true` | Services | `false`/`0`/`no` desactiva el prefijo de texto inline (el campo `_provenance` siempre queda) |
 | `CAST_NLM_AI_MARKER_PREFIX` | *(texto por default)* | Services | Reemplaza el texto del marcador inline |
+| `CAST_NLM_TELEGRAM_BOT_TOKEN` | *(requerida)* | Bot Telegram | Token que te da @BotFather |
+| `CAST_NLM_TELEGRAM_ALLOWED_USERS` | *(requerida)* | Bot Telegram | IDs numéricos de Telegram separados por coma, únicos autorizados a usar el bot |
 | `NOTEBOOKLM_MCP_CLI_PATH` | `~/.notebooklm-mcp-cli/` | Core | Sobreescribe el directorio de almacenamiento de credenciales |
 | `NOTEBOOKLM_PROFILE` (default del CLI) | `default` | CLI/MCP | Perfil de auth activo cuando no se especifica por comando |
 | `NOTEBOOKLM_MCP_TRANSPORT` | `stdio` | Servidor MCP | `stdio` \| `http` \| `sse` |
@@ -349,8 +458,15 @@ cast-notebooklm/
 │   ├── main.py                   # App + entry point `cast-notebooklm-api`
 │   ├── deps.py                   # Auth por API key, resolución de cliente
 │   ├── client_pool.py            # Factory de clientes multi-cuenta
+│   ├── webhooks.py               # Notificación por webhook al terminar Studio
+│   ├── static/                   # Dashboard web (HTML/CSS/JS estático, sin build)
 │   └── routers/                  # notebooks.py, chat.py, sources.py, studio.py
-├── tests/                        # Suite pytest (unit + integración de API REST)
+├── telegram_bot/                 # Bot de Telegram + entry point `cast-notebooklm-telegram`
+│   ├── bot.py                    # Loop de polling
+│   ├── api.py                    # Wrapper delgado de la API HTTP de Telegram
+│   ├── handlers.py                # Ruteo de comandos/preguntas
+│   └── state.py                  # Estado por chat (notebook/perfil activo)
+├── tests/                        # Suite pytest (unit + integración de API REST/Telegram)
 ├── SETUP-ALEXANDER.md            # Notas de setup personales (los pasos aplican a cualquiera)
 ├── CREDITS.md                    # Atribución completa a los tres proyectos fuente
 └── .env.example
