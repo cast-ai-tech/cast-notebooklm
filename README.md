@@ -330,6 +330,6 @@ MIT. Ver [LICENSE](LICENSE) (código propio de este proyecto) y [LICENSE-jacob-b
 
 **Alexander Cast** — Fundador de [KREOON](https://kreoon.com) e Infiny Group. Estratega digital, contenido e IA.
 
-- Instagram: *(pendiente de agregar)*
-- YouTube: *(pendiente de agregar)*
+- Instagram: [@alexemprendee](https://www.instagram.com/alexemprendee/)
+- YouTube: [@alexemprendee](https://www.youtube.com/@alexemprendee)
 - GitHub: [@AlexanderKast](https://github.com/AlexanderKast)
