@@ -1,4 +1,4 @@
-"""REST API layer for kast-notebooklm (FastAPI).
+"""REST API layer for cast-notebooklm (FastAPI).
 
 See main.py for the app/entry point, deps.py for API-key auth and client
 resolution, client_pool.py for the multi-account client factory, and

@@ -3,7 +3,7 @@ requires = ["hatchling"]
 build-backend = "hatchling.build"
 
 [project]
-name = "kast-notebooklm"
+name = "cast-notebooklm"
 version = "0.1.0"
 description = "Unified CLI, MCP server, and REST API for Google NotebookLM (with encrypted credential storage, multi-account support, AI-generated content provenance markers, and MCP tool profiles)"
 readme = "README.md"
@@ -34,7 +34,7 @@ dependencies = [
     "fastmcp>=2.0.0,<4.0",
     "pyyaml>=6.0,<7.0",
     "typing_extensions>=4.4.0; python_version < '3.12'",
-    # Added for kast-notebooklm
+    # Added for cast-notebooklm
     "cryptography>=42.0.0,<46.0",     # AES-256-GCM credential encryption at rest
     "fastapi>=0.110.0,<1.0",          # REST API layer
     "uvicorn[standard]>=0.29.0,<1.0", # ASGI server for the REST API
@@ -56,11 +56,11 @@ nlm = "notebooklm_tools.cli.main:cli_main"
 notebooklm-mcp = "notebooklm_tools.mcp.server:main"
 
 # REST API entry point
-kast-notebooklm-api = "rest_api.main:run"
+cast-notebooklm-api = "rest_api.main:run"
 
 [project.urls]
-Homepage = "https://github.com/AlexanderKast/kast-notebooklm"
-Repository = "https://github.com/AlexanderKast/kast-notebooklm"
+Homepage = "https://github.com/AlexanderKast/cast-notebooklm"
+Repository = "https://github.com/AlexanderKast/cast-notebooklm"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/notebooklm_tools", "rest_api"]

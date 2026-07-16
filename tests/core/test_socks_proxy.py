@@ -23,7 +23,7 @@ def _configure_socks_proxy(monkeypatch: pytest.MonkeyPatch) -> None:
 
 
 def test_package_declares_httpx_socks_support() -> None:
-    requirements = importlib.metadata.requires("kast-notebooklm") or []
+    requirements = importlib.metadata.requires("cast-notebooklm") or []
 
     assert any(requirement.startswith("httpx[socks]") for requirement in requirements)
 

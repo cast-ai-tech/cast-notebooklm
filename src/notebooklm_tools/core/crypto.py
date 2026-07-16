@@ -9,7 +9,7 @@ AES-GCM nonce size recommended by NIST SP 800-38D and used by
 implementation, not wire-compatible with the TypeScript original.
 
 Key resolution order:
-1. KAST_NLM_ENCRYPTION_KEY env var (64 hex chars = 256 bits)
+1. CAST_NLM_ENCRYPTION_KEY env var (64 hex chars = 256 bits)
 2. <storage_dir>/encryption.key (64 hex chars, created on first use)
 3. Freshly generated random key, persisted to that file (mode 0o600)
 
@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 KEY_LENGTH = 32  # 256-bit key
 NONCE_LENGTH = 12  # 96-bit nonce, recommended size for AES-GCM
 TAG_LENGTH = 16  # 128-bit auth tag, appended by AESGCM.encrypt()
-KEY_ENV_VAR = "KAST_NLM_ENCRYPTION_KEY"
+KEY_ENV_VAR = "CAST_NLM_ENCRYPTION_KEY"
 KEY_FILE_NAME = "encryption.key"
 
 
@@ -76,7 +76,7 @@ def _generate_and_persist_key(path: Path) -> bytes:
         f.write(key.hex())
     logger.warning(
         f"Generated new credential encryption key at {path}. "
-        "Back up this file (or set KAST_NLM_ENCRYPTION_KEY) -- losing it makes "
+        "Back up this file (or set CAST_NLM_ENCRYPTION_KEY) -- losing it makes "
         "existing encrypted credentials unrecoverable."
     )
     return key
@@ -133,5 +133,5 @@ def decrypt(token: str, key: bytes | None = None) -> str:
 
 def verify_encryption() -> bool:
     """Round-trip self-test. Mirrors roomi-fields' verifyEncryption()."""
-    probe = "kast-notebooklm-encryption-selftest"
+    probe = "cast-notebooklm-encryption-selftest"
     return decrypt(encrypt(probe)) == probe

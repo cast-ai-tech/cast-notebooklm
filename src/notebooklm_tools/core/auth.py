@@ -25,20 +25,20 @@ logger = logging.getLogger(__name__)
 def _encrypt_json(data: Any) -> dict:
     """Encrypt any JSON-serializable value for on-disk storage.
 
-    Returns an envelope `{"kast_encrypted": "<iv:tag:ciphertext>", "v": 1}`
+    Returns an envelope `{"cast_encrypted": "<iv:tag:ciphertext>", "v": 1}`
     that replaces what used to be plaintext cookies.json/metadata.json/
     auth.json contents. See core/crypto.py for the cipher and key handling.
     """
-    return {"kast_encrypted": crypto.encrypt(json.dumps(data)), "v": 1}
+    return {"cast_encrypted": crypto.encrypt(json.dumps(data)), "v": 1}
 
 
 def _decrypt_json(envelope: dict) -> Any:
     """Decrypt an envelope written by `_encrypt_json` back to its value."""
-    token = envelope.get("kast_encrypted")
+    token = envelope.get("cast_encrypted")
     if not isinstance(token, str):
         raise crypto.EncryptionKeyError(
-            "Expected an encrypted credential file (missing 'kast_encrypted' field). "
-            "If this file predates kast-notebooklm's encryption support, "
+            "Expected an encrypted credential file (missing 'cast_encrypted' field). "
+            "If this file predates cast-notebooklm's encryption support, "
             "re-run 'nlm login' to re-create it."
         )
     return json.loads(crypto.decrypt(token))

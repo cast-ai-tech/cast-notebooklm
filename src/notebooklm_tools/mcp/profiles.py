@@ -20,7 +20,7 @@ async query_start/query_status pair -- there is no narrower "answer
 questions only" group). Profiles here approximate the original's intent at
 the group granularity this codebase exposes.
 
-Selection: KAST_NLM_PROFILE=minimal|standard|full (env var only -- this
+Selection: CAST_NLM_PROFILE=minimal|standard|full (env var only -- this
 codebase has no settings.json to layer under it). Unset or full: no-op,
 i.e. every tool stays visible unless NOTEBOOKLM_DISABLED_GROUPS/
 NOTEBOOKLM_DISABLED_TOOLS says otherwise (unchanged default behavior).
@@ -35,7 +35,7 @@ from typing import Any
 
 logger = logging.getLogger(__name__)
 
-PROFILE_ENV_VAR = "KAST_NLM_PROFILE"
+PROFILE_ENV_VAR = "CAST_NLM_PROFILE"
 
 # Each profile lists the tool_groups.TOOL_GROUPS keys it exposes.
 # "full" is represented as None: no group is hidden.
@@ -60,7 +60,7 @@ PROFILES: dict[str, set[str] | None] = {
 
 
 def _resolve_profile_name() -> str | None:
-    """Read KAST_NLM_PROFILE; return None if unset, invalid, or 'full'."""
+    """Read CAST_NLM_PROFILE; return None if unset, invalid, or 'full'."""
     raw = os.environ.get(PROFILE_ENV_VAR, "").strip().lower()
     if not raw:
         return None
@@ -77,7 +77,7 @@ def apply(mcp: Any) -> str | None:
     """Hide tools outside the active profile's groups, if one is configured.
 
     Returns the resolved profile name ("minimal", "standard", "full"), or
-    None if KAST_NLM_PROFILE is unset/invalid (equivalent to "full": no
+    None if CAST_NLM_PROFILE is unset/invalid (equivalent to "full": no
     tools hidden by this function).
     """
     from . import tool_groups

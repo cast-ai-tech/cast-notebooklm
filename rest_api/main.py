@@ -1,4 +1,4 @@
-"""kast-notebooklm REST API -- FastAPI wrapper around notebooklm_tools.services.
+"""cast-notebooklm REST API -- FastAPI wrapper around notebooklm_tools.services.
 
 Mirrors the shape of roomi-fields/notebooklm-mcp's Express HTTP wrapper (MIT
 licensed, see CREDITS.md): a thin transport layer over the same service
@@ -30,7 +30,7 @@ from .routers import chat, notebooks, sources, studio
 logger = logging.getLogger(__name__)
 
 app = FastAPI(
-    title="kast-notebooklm REST API",
+    title="cast-notebooklm REST API",
     description=(
         "REST wrapper around the NotebookLM CLI/MCP services, for use from "
         "automation tools (n8n, Zapier, Make). Every route requires an "
@@ -69,7 +69,7 @@ def create_app() -> FastAPI:
 
 
 def run() -> None:
-    """Entry point for the `kast-notebooklm-api` console script."""
+    """Entry point for the `cast-notebooklm-api` console script."""
     import uvicorn
 
     if not get_configured_api_keys():
@@ -79,9 +79,9 @@ def run() -> None:
             "automation tools will send as the X-API-Key header."
         )
 
-    host = os.environ.get("KAST_NLM_API_HOST", "127.0.0.1")
-    port = int(os.environ.get("KAST_NLM_API_PORT", "8008"))
-    logger.info(f"Starting kast-notebooklm REST API on {host}:{port}")
+    host = os.environ.get("CAST_NLM_API_HOST", "127.0.0.1")
+    port = int(os.environ.get("CAST_NLM_API_PORT", "8008"))
+    logger.info(f"Starting cast-notebooklm REST API on {host}:{port}")
     uvicorn.run(app, host=host, port=port)
 
 

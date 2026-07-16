@@ -4,11 +4,11 @@ Neither of the two upstream projects this REST layer draws on authenticate
 their HTTP transport: roomi-fields/notebooklm-mcp's Express wrapper has no
 auth at all (binds 0.0.0.0 with CORS "*"), and the jacob-bd MCP HTTP
 transport just refuses non-loopback binds instead of authenticating
-requests. kast-notebooklm's REST API is meant to be reachable from
+requests. cast-notebooklm's REST API is meant to be reachable from
 automation tools (n8n, Zapier, Make) across the network, so every route
 here requires an API key.
 
-Configuration: KAST_NLM_API_KEYS, a comma-separated list of accepted keys.
+Configuration: CAST_NLM_API_KEYS, a comma-separated list of accepted keys.
 If unset, the API refuses to start (see main.py:run) rather than silently
 running open.
 """
@@ -25,7 +25,7 @@ from notebooklm_tools.core.exceptions import AuthenticationError, ProfileNotFoun
 
 from . import client_pool
 
-API_KEYS_ENV_VAR = "KAST_NLM_API_KEYS"
+API_KEYS_ENV_VAR = "CAST_NLM_API_KEYS"
 
 
 def get_configured_api_keys() -> set[str]:
