@@ -62,8 +62,8 @@ cast-notebooklm-api = "rest_api.main:run"
 cast-notebooklm-telegram = "telegram_bot.bot:run"
 
 [project.urls]
-Homepage = "https://github.com/AlexanderKast/cast-notebooklm"
-Repository = "https://github.com/AlexanderKast/cast-notebooklm"
+Homepage = "https://github.com/cast-ai-tech/cast-notebooklm"
+Repository = "https://github.com/cast-ai-tech/cast-notebooklm"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/notebooklm_tools", "rest_api", "telegram_bot"]

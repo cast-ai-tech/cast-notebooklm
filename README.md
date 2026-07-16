@@ -43,7 +43,7 @@ Seguí estos pasos en orden, uno por uno. No te saltes ninguno.
 En la misma terminal, pegá esto y apretá Enter:
 
 ```bash
-git clone https://github.com/AlexanderKast/cast-notebooklm.git
+git clone https://github.com/cast-ai-tech/cast-notebooklm.git
 ```
 
 Esto copia todo el proyecto a una carpeta nueva en tu compu llamada `cast-notebooklm`. Ahora entrá a esa carpeta:
