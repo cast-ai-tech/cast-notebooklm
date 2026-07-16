@@ -2,8 +2,6 @@
 
 Una herramienta que conecta tus notebooks de [Google NotebookLM](https://notebooklm.google.com) con Claude (o con n8n, o con la terminal), para que puedas preguntarle cosas a tus documentos, generar audios/videos/resúmenes, y automatizar todo eso — sin entrar manualmente a la web de NotebookLM cada vez.
 
-> Este proyecto está construido sobre el trabajo de otras 3 personas (open source, licencia MIT). No es un producto propio desde cero — es una combinación de ideas de esos 3 proyectos en uno solo. Créditos completos en [CREDITS.md](CREDITS.md).
-
 ---
 
 ## Índice
@@ -16,7 +14,6 @@ Una herramienta que conecta tus notebooks de [Google NotebookLM](https://noteboo
 - [Seguridad](#seguridad)
 - [Estructura del proyecto](#estructura-del-proyecto)
 - [Tests](#tests)
-- [Créditos](#créditos)
 - [Licencia](#licencia)
 - [Autor](#autor)
 
@@ -481,13 +478,9 @@ pytest tests/ -m "not e2e"
 
 Los tests marcados `e2e` requieren autenticación real contra una cuenta y quedan excluidos por default.
 
-## Créditos
-
-Construido sobre [jacob-bd/notebooklm-mcp-cli](https://github.com/jacob-bd/notebooklm-mcp-cli) (vendorizado, MIT), con ideas de diseño reimplementadas de forma independiente en Python desde [roomi-fields/notebooklm-mcp](https://github.com/roomi-fields/notebooklm-mcp) (API REST, cifrado, multi-cuenta, MIT) y [PleasePrompto/notebooklm-mcp](https://github.com/PleasePrompto/notebooklm-mcp) (marcador de provenance, perfiles de herramientas, MIT). Detalle completo en [CREDITS.md](CREDITS.md).
-
 ## Licencia
 
-MIT. Ver [LICENSE](LICENSE) (código propio de este proyecto) y [LICENSE-jacob-bd](LICENSE-jacob-bd) (la base vendorizada). Atribución completa en [CREDITS.md](CREDITS.md).
+MIT. Ver [LICENSE](LICENSE). Este proyecto incorpora una porción de código base de terceros bajo licencia MIT — ver [CREDITS.md](CREDITS.md) y [LICENSE-jacob-bd](LICENSE-jacob-bd) para el detalle.
 
 ## Autor
 
