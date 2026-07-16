@@ -123,6 +123,7 @@ def test_content_pack_triggers_webhook_with_all_artifact_ids(
 
     monkeypatch.setattr(studio_router, "create_artifact", fake_create_artifact)
     monkeypatch.setattr(studio_router, "notify_on_completion", fake_notify)
+    monkeypatch.setattr(studio_router, "validate_webhook_url", lambda url: None)
 
     r = client.post(
         "/studio/content-pack",
@@ -148,6 +149,7 @@ def test_generate_triggers_webhook_for_single_artifact(client, auth_headers, wit
 
     monkeypatch.setattr(studio_router, "create_artifact", fake_create_artifact)
     monkeypatch.setattr(studio_router, "notify_on_completion", fake_notify)
+    monkeypatch.setattr(studio_router, "validate_webhook_url", lambda url: None)
 
     r = client.post(
         "/studio/generate",
@@ -158,3 +160,33 @@ def test_generate_triggers_webhook_for_single_artifact(client, auth_headers, wit
     assert r.status_code == 200
     assert notified["artifact_ids"] == ["art-1"]
     assert notified["webhook_url"] == "https://example.com/hook"
+
+
+def test_generate_rejects_ssrf_webhook_url_before_creating_anything(
+    client, auth_headers, with_profile, monkeypatch
+):
+    from rest_api import webhooks as webhooks_module
+
+    called = {"create_artifact": False}
+
+    def fake_create_artifact(*args, **kwargs):
+        called["create_artifact"] = True
+        return {"artifact_type": "audio", "artifact_id": "art-1", "status": "in_progress"}
+
+    monkeypatch.setattr(studio_router, "create_artifact", fake_create_artifact)
+    monkeypatch.setattr(
+        webhooks_module.socket, "getaddrinfo", lambda host, port: [(2, 1, 6, "", ("169.254.169.254", 0))]
+    )
+
+    r = client.post(
+        "/studio/generate",
+        headers=auth_headers,
+        json={
+            "notebook_id": "nb-1",
+            "artifact_type": "audio",
+            "webhook_url": "http://cloud-metadata.internal/latest/meta-data",
+        },
+    )
+
+    assert r.status_code == 400
+    assert called["create_artifact"] is False

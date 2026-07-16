@@ -35,7 +35,7 @@ from notebooklm_tools.services.studio import (
 
 from ..client_pool import DEFAULT_PROFILE
 from ..deps import get_notebooklm_client, require_api_key
-from ..webhooks import notify_on_completion
+from ..webhooks import notify_on_completion, validate_webhook_url
 
 router = APIRouter(prefix="/studio", tags=["studio"], dependencies=[Depends(require_api_key)])
 
@@ -68,6 +68,8 @@ class GenerateRequest(BaseModel):
 
 @router.post("/generate")
 async def generate(body: GenerateRequest) -> dict:
+    if body.webhook_url:
+        validate_webhook_url(body.webhook_url)
     client = get_notebooklm_client(body.profile)
     result = create_artifact(
         client,
@@ -117,6 +119,8 @@ async def content_pack(body: ContentPackRequest) -> dict:
     Each type is requested independently; one type failing (e.g. an invalid
     option) does not stop the rest -- the response reports per-type success.
     """
+    if body.webhook_url:
+        validate_webhook_url(body.webhook_url)
     client = get_notebooklm_client(body.profile)
 
     results: list[dict[str, Any]] = []
